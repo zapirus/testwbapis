@@ -35,9 +35,11 @@ func (s *APIServer) confRouter() {
 	s.router.HandleFunc("/shop", s.ShopPost())
 
 	// change
-
 	s.router.HandleFunc("/changeuser/{id}", s.UserChange())
 	s.router.HandleFunc("/changeshop/{id}", s.ShopChange())
+
+	//delete
+	//s.router.HandleFunc("/")
 
 }
 

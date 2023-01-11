@@ -75,7 +75,37 @@ func UniversalFunc(w http.ResponseWriter, r *http.Request) ([]model.User, []mode
 		json.NewDecoder(r.Body).Decode(&changeUser)
 		users[id] = changeUser
 		return users, nil
+
+	} else if r.Method == "DELETE" && strip(r.URL.RequestURI()) == "/changeuser/" {
+		var reqId = mux.Vars(r)["id"]
+		id, err := strconv.Atoi(reqId)
+		if err != nil {
+			w.Write([]byte("Не удалось сконвертировать"))
+			return nil, nil
+		}
+		if id >= len(users) {
+			w.Write([]byte("Нет такого поста"))
+			return nil, nil
+		}
+		users = append(users[:id], users[id+1:]...)
+		return users, nil
+
+	} else if r.Method == "DELETE" && strip(r.URL.RequestURI()) == "/changeshop/" {
+		var reqId = mux.Vars(r)["id"]
+		id, err := strconv.Atoi(reqId)
+		if err != nil {
+			w.Write([]byte("Не удалось сконвертировать"))
+			return nil, nil
+		}
+		if id >= len(users) {
+			w.Write([]byte("Нет такого поста"))
+			return nil, nil
+		}
+		shops = append(shops[:id], shops[id+1:]...)
+		return nil, shops
+
 	}
+
 	w.Write([]byte("Ничего не нашлось. Сорян\n"))
 	return nil, nil
 }
