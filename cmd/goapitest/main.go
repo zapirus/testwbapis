@@ -26,9 +26,9 @@ func main() {
 	}
 	s := handlers.New(config)
 
-	if err = s.Start(); err != nil {
+	if err = s.Run(); err != nil {
 		log.Fatalln(err)
 	}
 
-	s.Start()
+	s.Run()
 }
