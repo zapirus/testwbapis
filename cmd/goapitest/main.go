@@ -4,7 +4,6 @@ import (
 	"flag"
 	"github.com/BurntSushi/toml"
 	"github.com/zapirus/testwbapis/internal/handlers"
-
 	"log"
 )
 
@@ -18,7 +17,6 @@ func init() {
 
 func main() {
 	flag.Parse()
-
 	config := handlers.NewConfig()
 	_, err := toml.DecodeFile(configPath, config)
 	if err != nil {
@@ -26,9 +24,6 @@ func main() {
 	}
 	s := handlers.New(config)
 
-	if err = s.Run(); err != nil {
-		log.Fatalln(err)
-	}
-
 	s.Run()
+
 }

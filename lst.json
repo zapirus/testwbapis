@@ -1,16 +1,14 @@
-{
-  "family": "Петров",
-  "name": "Петр",
-  "otch": "Петрович",
-  "age": 35,
-  "regist": "1.09.1987",
-
-};
-
-{
-  "title": "Shop",
-  "adress": "",
-  "work": "Da",
-
-
-}
+[
+  {
+    "family": "Петров",
+    "name": "Петр",
+    "otch": "Петрович",
+    "age": 35,
+    "regist": "1.09.1987"
+  },
+  {
+    "title": "Shop",
+    "adress": "",
+    "work": "Da"
+  }
+]
