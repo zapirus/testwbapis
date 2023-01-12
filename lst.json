@@ -1,16 +1,16 @@
 {
-  "family": "Виктор Иван",
-  "name": "",
-  "otch": "",
-  "age": 5,
-  "regist": "",
+  "family": "Петров",
+  "name": "Петр",
+  "otch": "Петрович",
+  "age": 35,
+  "regist": "1.09.1987",
 
 };
 
 {
-  "title": "Виктор Иван",
+  "title": "Shop",
   "adress": "",
-  "work": bool,
+  "work": "Da",
 
 
 }
