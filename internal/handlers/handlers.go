@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/zapirus/testwbapis/internal/model"
@@ -31,29 +30,13 @@ func New(config *Config) *APIServer {
 	}
 }
 
-// Strip Функция, которая режет URL
-func (s *APIServer) Strip(url string) string {
-	var (
-		res     string
-		counter int
-	)
-
-	for _, i2 := range url {
-		if counter == 2 {
-			break
-		} else if i2 == 47 {
-			counter += 1
-		}
-		res += string(i2)
-	}
-	return res
-}
-
 func (s *APIServer) Run() {
 	srv := &http.Server{
 		Addr:    s.config.HTTPAddr,
 		Handler: s.router,
 	}
+
+	s.confRouter()
 	logrus.Printf("Завелись на порту %s", s.config.HTTPAddr)
 
 	idConnClosed := make(chan struct{})
@@ -103,6 +86,24 @@ func (s *APIServer) confRouter() {
 
 }
 
+// Strip Функция, которая режет URL
+func (s *APIServer) Strip(url string) string {
+	var (
+		res     string
+		counter int
+	)
+
+	for _, i2 := range url {
+		if counter == 2 {
+			break
+		} else if i2 == 47 {
+			counter += 1
+		}
+		res += string(i2)
+	}
+	return res
+}
+
 // GetAllUsers Функция, которая получает всех юзеров
 func (s *APIServer) GetAllUsers() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -136,7 +137,6 @@ func (s *APIServer) GetOneUser() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		url := s.Strip(r.URL.RequestURI())
-		//met := r.Method
 		var reqId = mux.Vars(r)["title"]
 		res, _ := service.GetOneTable(url, reqId)
 		if err := json.NewEncoder(w).Encode(res); err != nil {
@@ -196,7 +196,6 @@ func (s *APIServer) UserPost() http.HandlerFunc {
 		if r.Method == "POST" && r.URL.RequestURI() == "/user" {
 			met := r.Method
 			var newUser model.User
-			fmt.Println(newUser)
 			if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
 				logrus.Fatalln(err)
 			}

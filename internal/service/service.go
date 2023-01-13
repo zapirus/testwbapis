@@ -85,10 +85,10 @@ func UniversalFunc(met, url, id string, newUser model.User, newShop model.Shop) 
 }
 
 // GetOneTable Функция, которая получает одну запись по имени той, или иной сущности. В зависимости от URL-a
-func GetOneTable(url, reqId string) (model.User, model.Shop) {
+func GetOneTable(url, name string) (model.User, model.Shop) {
 	if url == "/getoneuser/" {
-		result := strings.ToLower(reqId)
-		fmt.Println(url, reqId)
+		result := strings.ToLower(name)
+		fmt.Println(url, name)
 		for i, user := range users {
 			if strings.ToLower(user.Name) == result {
 				return users[i], model.Shop{}
@@ -96,7 +96,7 @@ func GetOneTable(url, reqId string) (model.User, model.Shop) {
 		}
 
 	} else if (url) == "/getoneshop/" {
-		result := strings.ToLower(reqId)
+		result := strings.ToLower(name)
 
 		for i, shop := range shops {
 			if strings.ToLower(shop.Title) == result {

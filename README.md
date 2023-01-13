@@ -25,28 +25,34 @@ ____
 1. HTTP сервер для общения с пользователем
 2. Сервис хранения и обработки данных, в который ходит HTTP  сервер за данными.
 Остальные вводные те же.
+
+Для запросов использовал "POSTMAN" :fire:
 ___
-    Примеры запросов :fire:
+    Примеры запросов
     _________________
-    POST  127.0.0.1:8080/user - создает юзера
-    POST 127.0.0.1:8080/shop - создает магазин
+    POST 127.0.0.1:4050/user - создает юзера
+    POST 127.0.0.1:4050/shop - создает магазин
     -------------------------
-    GET 127.0.0.1:8080/getallshops (getallusers) - получает все наименования
-    GET 127.0.0.1:8080/getoneuser{title} getoneshop{title} - получает  одну запись
-    GET 127.0.0.1:8080/getfielduser/{title}"
-    GET 127.0.0.1:8080/getfieldshop/{title}"
+    GET 127.0.0.1:4050/getallshops (getallusers) - получает все наименования
+    GET 127.0.0.1:4050/getoneuser{title} getoneshop{title} - получает  одну запись
+    GET 127.0.0.1:4050/getfielduser/{title} получает по значению одно поле
+    GET 127.0.0.1:4050/getfieldshop/{title} получает по значению одно поле
     -------------------------
-    PUT 127.0.0.1:8080/changeuser/{id} (changeshop/{id})  изменяет сущность
+    PUT 127.0.0.1:4050/changeuser/{id} (changeshop/{id})  изменяет сущность
     -------------------------
-    DELETE 127.0.0.1:8080/changeuser/{id} (changeshop/{id})  удаляет сущность
-
-
+    DELETE 127.0.0.1:4050/changeuser/{id} (changeshop/{id})  удаляет сущность
 
 
 
 ```go
 Для запускаа установить зависимости и ввести:
 ________________________________________________
- go build -v ./cmd/goapitest  && ./goapitest  
+ go build -v ./cmd/goapitest && ./goapitest  
 ```
+
+![god](./images/img.png)
+![god](./images/img_1.png)
+![god](./images/img_2.png)
+![god](./images/img_3.png)
+![god](./images/img_4.png)
 ![go](https://myeditor.ru/wp-content/uploads/2/9/7/2977d317464166d48a3b4e4c2ee8f552.png)
