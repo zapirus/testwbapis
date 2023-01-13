@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/zapirus/testwbapis/internal/model"
@@ -269,7 +270,8 @@ func (s *APIServer) UserChange() http.HandlerFunc {
 func (s *APIServer) ShopChange() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		if r.Method == "POST" && r.URL.RequestURI() == "/changeshop/" {
+		if r.Method == "PUT" && s.Strip(r.URL.RequestURI()) == "/changeshop/" {
+			fmt.Println(r.Method)
 			var newShop model.Shop
 			if err := json.NewDecoder(r.Body).Decode(&newShop); err != nil {
 				logrus.Fatalln(err)
@@ -277,7 +279,7 @@ func (s *APIServer) ShopChange() http.HandlerFunc {
 			url := s.Strip(r.URL.RequestURI())
 			met := r.Method
 			var reqId = mux.Vars(r)["id"]
-			result, _ := service.UniversalFunc(met, url, reqId, model.User{}, newShop)
+			_, result := service.UniversalFunc(met, url, reqId, model.User{}, newShop)
 			if err := json.NewEncoder(w).Encode(result); err != nil {
 				logrus.Fatalln(err)
 			}

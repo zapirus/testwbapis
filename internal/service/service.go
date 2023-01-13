@@ -46,12 +46,12 @@ func UniversalFunc(met, url, id string, newUser model.User, newShop model.Shop) 
 			logrus.Fatalln(err)
 			return nil, nil
 		}
-		if ids >= len(users) {
+		if ids >= len(shops) {
 			logrus.Fatalln(err)
 			return nil, nil
 		}
 		shops[ids] = newShop
-		return users, nil
+		return nil, shops
 	} else if url == "/changeuser/" && met == "DELETE" {
 		ids, err := strconv.Atoi(id)
 		fmt.Println("dddgggg")
