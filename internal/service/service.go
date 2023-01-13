@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/zapirus/testwbapis/internal/model"
 	"strconv"
@@ -16,15 +15,12 @@ var (
 
 // UniversalFunc Универсальная функция, которая работает непосредственно с записями.
 func UniversalFunc(met, url, id string, newUser model.User, newShop model.Shop) ([]model.User, []model.Shop) {
-	fmt.Println(url, met)
 
 	if url == "/user" && met == "POST" {
 		users = append(users, newUser)
 		return users, nil
 	} else if url == "/shop" && met == "POST" {
-		fmt.Println(url)
 		shops = append(shops, newShop)
-		fmt.Println(shops)
 		return nil, shops
 	} else if url == "/changeuser/" && met == "PUT" {
 		ids, err := strconv.Atoi(id)
@@ -54,7 +50,6 @@ func UniversalFunc(met, url, id string, newUser model.User, newShop model.Shop) 
 		return nil, shops
 	} else if url == "/changeuser/" && met == "DELETE" {
 		ids, err := strconv.Atoi(id)
-		fmt.Println("dddgggg")
 		if err != nil {
 			logrus.Fatalln(err)
 			return nil, nil
@@ -91,7 +86,6 @@ func UniversalFunc(met, url, id string, newUser model.User, newShop model.Shop) 
 func GetOneTable(url, name string) (model.User, model.Shop) {
 	if url == "/getoneuser/" {
 		result := strings.ToLower(name)
-		fmt.Println(url, name)
 		for i, user := range users {
 			if strings.ToLower(user.Name) == result {
 				return users[i], model.Shop{}
@@ -114,10 +108,8 @@ func GetOneTable(url, name string) (model.User, model.Shop) {
 // GetOneField Возвращает одно поле по имени
 func GetOneField(urlField, reqId string) (model.User, model.Shop) {
 	if urlField == "/getfielduser/" {
-		fmt.Println(urlField)
-		fmt.Println(reqId)
+
 		result := strings.ToLower(reqId)
-		fmt.Println(result)
 		mp := make(map[string]interface{})
 
 		for _, user := range users {
@@ -132,13 +124,12 @@ func GetOneField(urlField, reqId string) (model.User, model.Shop) {
 			}
 		}
 		jsonbody, err := json.Marshal(mp)
-		fmt.Println(jsonbody)
 		if err != nil {
-			fmt.Println(err)
+			logrus.Fatalln(err)
 		}
 		us := model.User{}
 		if err = json.Unmarshal(jsonbody, &us); err != nil {
-			fmt.Println(err)
+			logrus.Fatalln(err)
 			return model.User{}, model.Shop{}
 		}
 		return us, model.Shop{}
@@ -157,13 +148,12 @@ func GetOneField(urlField, reqId string) (model.User, model.Shop) {
 			}
 		}
 		jsonbody, err := json.Marshal(mp)
-		fmt.Println(jsonbody)
 		if err != nil {
-			fmt.Println(err)
+			logrus.Fatalln(err)
 		}
 		sh := model.Shop{}
 		if err = json.Unmarshal(jsonbody, &sh); err != nil {
-			fmt.Println(err)
+			logrus.Fatalln(err)
 			return model.User{}, model.Shop{}
 		}
 		return model.User{}, sh

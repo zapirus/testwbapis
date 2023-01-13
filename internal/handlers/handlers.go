@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/zapirus/testwbapis/internal/model"
@@ -76,7 +75,7 @@ func (s *APIServer) confRouter() {
 	s.router.HandleFunc("/getallusers", s.GetAllUsers())
 	s.router.HandleFunc("/getallshops", s.GetAllShops())
 
-	//роуты для юзера
+	//роуты для юзера (одна табличка)
 	s.router.HandleFunc("/getoneuser/{title}", s.GetOneUser()).Methods("GET")
 	s.router.HandleFunc("/getoneshop/{title}", s.GetOneShop()).Methods("GET")
 
@@ -271,7 +270,6 @@ func (s *APIServer) ShopChange() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == "PUT" && s.Strip(r.URL.RequestURI()) == "/changeshop/" {
-			fmt.Println(r.Method)
 			var newShop model.Shop
 			if err := json.NewDecoder(r.Body).Decode(&newShop); err != nil {
 				logrus.Fatalln(err)
