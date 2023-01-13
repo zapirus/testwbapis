@@ -284,7 +284,7 @@ func (s *APIServer) ShopChange() http.HandlerFunc {
 				logrus.Fatalln(err)
 			}
 
-		} else if r.Method == "DELETE" && s.Strip(r.URL.RequestURI()) == "/changshop/" {
+		} else if r.Method == "DELETE" && s.Strip(r.URL.RequestURI()) == "/changeshop/" {
 			var newShop model.Shop
 			if err := json.NewDecoder(r.Body).Decode(&newShop); err != nil {
 				logrus.Fatalln(err)
@@ -292,7 +292,7 @@ func (s *APIServer) ShopChange() http.HandlerFunc {
 			url := s.Strip(r.URL.RequestURI())
 			met := r.Method
 			var reqId = mux.Vars(r)["id"]
-			result, _ := service.UniversalFunc(met, url, reqId, model.User{}, newShop)
+			_, result := service.UniversalFunc(met, url, reqId, model.User{}, newShop)
 			if err := json.NewEncoder(w).Encode(result); err != nil {
 				logrus.Fatalln(err)
 			}

@@ -76,7 +76,7 @@ func UniversalFunc(met, url, id string, newUser model.User, newShop model.Shop) 
 			return nil, nil
 		}
 		shops = append(shops[:ids], shops[ids+1:]...)
-		return users, nil
+		return nil, shops
 	} else if url == "/getallusers" && met == "GET" {
 		return users, nil
 	} else if url == "/getallshops" && met == "GET" {
