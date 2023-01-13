@@ -38,9 +38,7 @@ func (s *APIServer) Run() {
 
 	s.confRouter()
 	logrus.Printf("Завелись на порту %s", s.config.HTTPAddr)
-
 	idConnClosed := make(chan struct{})
-
 	go func() {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, os.Interrupt)
@@ -222,7 +220,7 @@ func (s *APIServer) ShopPost() http.HandlerFunc {
 			if err := json.NewDecoder(r.Body).Decode(&newShop); err != nil {
 				logrus.Fatalln(err)
 			}
-			result, _ := service.UniversalFunc(met, "", "", model.User{}, newShop)
+			_, result := service.UniversalFunc(met, r.URL.RequestURI(), "", model.User{}, newShop)
 			if err := json.NewEncoder(w).Encode(result); err != nil {
 				logrus.Fatalln(err)
 			}

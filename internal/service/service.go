@@ -16,12 +16,15 @@ var (
 
 // UniversalFunc Универсальная функция, которая работает непосредственно с записями.
 func UniversalFunc(met, url, id string, newUser model.User, newShop model.Shop) ([]model.User, []model.Shop) {
+	fmt.Println(url, met)
 
 	if url == "/user" && met == "POST" {
 		users = append(users, newUser)
 		return users, nil
 	} else if url == "/shop" && met == "POST" {
+		fmt.Println(url)
 		shops = append(shops, newShop)
+		fmt.Println(shops)
 		return nil, shops
 	} else if url == "/changeuser/" && met == "PUT" {
 		ids, err := strconv.Atoi(id)
