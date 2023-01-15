@@ -8,7 +8,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/zapirus/testwbapis/internal/model"
 	"github.com/zapirus/testwbapis/internal/service"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -37,49 +36,42 @@ func (s *APIServer) Run() {
 	}
 
 	s.confRouter()
-	logrus.Printf("Завелись на порту %s", s.config.HTTPAddr)
+	s.logger.Printf("Завелись на порту %s", s.config.HTTPAddr)
 	idConnClosed := make(chan struct{})
 	go func() {
 		sigint := make(chan os.Signal, 1)
-		signal.Notify(sigint, os.Interrupt)
-		signal.Notify(sigint, syscall.SIGTERM)
+		signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
 		<-sigint
-		log.Println("")
 		ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 		defer cancel()
 		if err := srv.Shutdown(ctx); err != nil {
-			logrus.Fatalln(err)
+			s.logger.Fatalln(err)
 		}
 		close(idConnClosed)
 	}()
 	if err := srv.ListenAndServe(); err != nil {
 		if !errors.Is(err, http.ErrServerClosed) {
-			logrus.Fatalln(err)
+			s.logger.Fatalln(err)
 		}
 	}
 	<-idConnClosed
-	logrus.Println("Всего доброго!")
+	s.logger.Println("Всего доброго!")
 }
 
 // Роуты для запросов
 func (s *APIServer) confRouter() {
-	// POST
+	// роуты юзера
 	s.router.HandleFunc("/user", s.UserPost())
-	s.router.HandleFunc("/shop", s.ShopPost())
-	//
-	//// Изменение, или удаление. (в зависимости от запроса)
 	s.router.HandleFunc("/changeuser/{id}", s.UserChange())
-	s.router.HandleFunc("/changeshop/{id}", s.ShopChange())
-
-	// получение всех записей
 	s.router.HandleFunc("/getallusers", s.GetAllUsers())
-	s.router.HandleFunc("/getallshops", s.GetAllShops())
-
-	//роуты для юзера (одна табличка)
 	s.router.HandleFunc("/getoneuser/{title}", s.GetOneUser()).Methods("GET")
-	s.router.HandleFunc("/getoneshop/{title}", s.GetOneShop()).Methods("GET")
-
 	s.router.HandleFunc("/getfielduser/{title}", s.GetOneFieldUser()).Methods("GET")
+
+	// роуты шопа
+	s.router.HandleFunc("/shop", s.ShopPost())
+	s.router.HandleFunc("/changeshop/{id}", s.ShopChange())
+	s.router.HandleFunc("/getallshops", s.GetAllShops())
+	s.router.HandleFunc("/getoneshop/{title}", s.GetOneShop()).Methods("GET")
 	s.router.HandleFunc("/getfieldshop/{title}", s.GetOneFieldShop()).Methods("GET")
 
 }
@@ -87,17 +79,17 @@ func (s *APIServer) confRouter() {
 // Strip Функция, которая режет URL
 func (s *APIServer) Strip(url string) string {
 	var (
-		res     string
-		counter int
+		beforeSpace int
+		res         string
 	)
 
-	for _, i2 := range url {
-		if counter == 2 {
+	for _, elem := range url {
+		if beforeSpace == 2 {
 			break
-		} else if i2 == 47 {
-			counter += 1
+		} else if elem == 47 {
+			beforeSpace += 1
 		}
-		res += string(i2)
+		res += string(elem)
 	}
 	return res
 }
@@ -110,7 +102,9 @@ func (s *APIServer) GetAllUsers() http.HandlerFunc {
 		met := r.Method
 		res, _ := service.UniversalFunc(met, url, "", model.User{}, model.Shop{})
 		if err := json.NewEncoder(w).Encode(res); err != nil {
-			logrus.Fatalln(err)
+			s.logger.Printf("Не удалось преаброзовать: %s", err)
+			w.WriteHeader(http.StatusConflict)
+			return
 		}
 	}
 
@@ -124,7 +118,9 @@ func (s *APIServer) GetAllShops() http.HandlerFunc {
 		met := r.Method
 		_, res := service.UniversalFunc(met, url, "", model.User{}, model.Shop{})
 		if err := json.NewEncoder(w).Encode(res); err != nil {
-			logrus.Fatalln(err)
+			s.logger.Printf("Не удалось преаброзовать: %s", err)
+			w.WriteHeader(http.StatusConflict)
+			return
 		}
 	}
 
@@ -136,9 +132,11 @@ func (s *APIServer) GetOneUser() http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		url := s.Strip(r.URL.RequestURI())
 		var reqId = mux.Vars(r)["title"]
-		res, _ := service.GetOneTable(url, reqId)
+		res, _ := service.GetOneEntity(url, reqId)
 		if err := json.NewEncoder(w).Encode(res); err != nil {
-			logrus.Fatalln(err)
+			s.logger.Printf("Не удалось преаброзовать: %s", err)
+			w.WriteHeader(http.StatusConflict)
+			return
 		}
 	}
 
@@ -150,9 +148,11 @@ func (s *APIServer) GetOneShop() http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		url := s.Strip(r.URL.RequestURI())
 		var reqId = mux.Vars(r)["title"]
-		_, res := service.GetOneTable(url, reqId)
+		_, res := service.GetOneEntity(url, reqId)
 		if err := json.NewEncoder(w).Encode(res); err != nil {
-			logrus.Fatalln(err)
+			s.logger.Errorf("Не удалось преаброзовать: %s", err)
+			w.WriteHeader(http.StatusConflict)
+			return
 		}
 	}
 
@@ -166,7 +166,9 @@ func (s *APIServer) GetOneFieldUser() http.HandlerFunc {
 		var reqId = mux.Vars(r)["title"]
 		res, _ := service.GetOneField(urlField, reqId)
 		if err := json.NewEncoder(w).Encode(res); err != nil {
-			logrus.Fatalln(err)
+			s.logger.Errorf("Не удалось преаброзовать: %s", err)
+			w.WriteHeader(http.StatusConflict)
+			return
 		}
 
 	}
@@ -181,7 +183,9 @@ func (s *APIServer) GetOneFieldShop() http.HandlerFunc {
 		var reqId = mux.Vars(r)["title"]
 		_, res := service.GetOneField(urlField, reqId)
 		if err := json.NewEncoder(w).Encode(res); err != nil {
-			logrus.Fatalln(err)
+			s.logger.Printf("Не удалось преаброзовать: %s", err)
+			w.WriteHeader(http.StatusConflict)
+			return
 		}
 	}
 
@@ -195,11 +199,15 @@ func (s *APIServer) UserPost() http.HandlerFunc {
 			met := r.Method
 			var newUser model.User
 			if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
-				logrus.Fatalln(err)
+				s.logger.Printf("Не удалось преаброзовать: %s", err)
+				w.WriteHeader(http.StatusConflict)
+				return
 			}
 			result, _ := service.UniversalFunc(met, r.URL.RequestURI(), "", newUser, model.Shop{})
 			if err := json.NewEncoder(w).Encode(result); err != nil {
-				logrus.Fatalln(err)
+				s.logger.Printf("Не удалось преаброзовать: %s", err)
+				w.WriteHeader(http.StatusConflict)
+				return
 			}
 
 		} else {
@@ -218,11 +226,15 @@ func (s *APIServer) ShopPost() http.HandlerFunc {
 			var newShop model.Shop
 			met := r.Method
 			if err := json.NewDecoder(r.Body).Decode(&newShop); err != nil {
-				logrus.Fatalln(err)
+				s.logger.Printf("Не удалось преаброзовать: %s", err)
+				w.WriteHeader(http.StatusConflict)
+				return
 			}
 			_, result := service.UniversalFunc(met, r.URL.RequestURI(), "", model.User{}, newShop)
 			if err := json.NewEncoder(w).Encode(result); err != nil {
-				logrus.Fatalln(err)
+				s.logger.Printf("Не удалось преаброзовать: %s", err)
+				w.WriteHeader(http.StatusConflict)
+				return
 			}
 
 		} else {
@@ -239,28 +251,40 @@ func (s *APIServer) UserChange() http.HandlerFunc {
 		if r.Method == "PUT" && s.Strip(r.URL.RequestURI()) == "/changeuser/" {
 			var newUser model.User
 			if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
-				logrus.Fatalln(err)
+				s.logger.Printf("Не удалось преаброзовать: %s", err)
+				w.WriteHeader(http.StatusConflict)
+				return
 			}
 			url := s.Strip(r.URL.RequestURI())
 			met := r.Method
 			var reqId = mux.Vars(r)["id"]
 			result, _ := service.UniversalFunc(met, url, reqId, newUser, model.Shop{})
 			if err := json.NewEncoder(w).Encode(result); err != nil {
-				logrus.Fatalln(err)
+				s.logger.Println("Не удалось преобразовать", err)
+				w.WriteHeader(http.StatusConflict)
+				return
 			}
 
 		} else if r.Method == "DELETE" && s.Strip(r.URL.RequestURI()) == "/changeuser/" {
 			var newUser model.User
 			if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
-				logrus.Fatalln(err)
+				s.logger.Println("Не удалось преобразовать", err)
+				w.WriteHeader(http.StatusConflict)
+				return
+
 			}
 			url := s.Strip(r.URL.RequestURI())
 			met := r.Method
 			var reqId = mux.Vars(r)["id"]
 			result, _ := service.UniversalFunc(met, url, reqId, newUser, model.Shop{})
 			if err := json.NewEncoder(w).Encode(result); err != nil {
-				logrus.Fatalln(err)
+				s.logger.Println("Не удалось преобразовать", err)
+				return
 			}
+		} else {
+			s.logger.Println("Ничего не нашлось")
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 	}
 }
@@ -285,15 +309,23 @@ func (s *APIServer) ShopChange() http.HandlerFunc {
 		} else if r.Method == "DELETE" && s.Strip(r.URL.RequestURI()) == "/changeshop/" {
 			var newShop model.Shop
 			if err := json.NewDecoder(r.Body).Decode(&newShop); err != nil {
-				logrus.Fatalln(err)
+				s.logger.Printf("Не удалось преаброзовать: %s", err)
+				w.WriteHeader(http.StatusConflict)
+				return
 			}
 			url := s.Strip(r.URL.RequestURI())
 			met := r.Method
 			var reqId = mux.Vars(r)["id"]
 			_, result := service.UniversalFunc(met, url, reqId, model.User{}, newShop)
 			if err := json.NewEncoder(w).Encode(result); err != nil {
-				logrus.Fatalln(err)
+				s.logger.Printf("Не удалось преаброзовать: %s", err)
+				w.WriteHeader(http.StatusConflict)
+				return
 			}
+		} else {
+			s.logger.Println("Ничего не нашлось")
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 	}
 }

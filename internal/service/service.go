@@ -6,6 +6,7 @@ import (
 	"github.com/zapirus/testwbapis/internal/model"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var (
@@ -15,22 +16,26 @@ var (
 
 // UniversalFunc Универсальная функция, которая работает непосредственно с записями.
 func UniversalFunc(met, url, id string, newUser model.User, newShop model.Shop) ([]model.User, []model.Shop) {
+	var mx sync.Mutex
 
 	if url == "/user" && met == "POST" {
+		mx.Lock()
 		users = append(users, newUser)
+		mx.Unlock()
 		return users, nil
 	} else if url == "/shop" && met == "POST" {
+		mx.Lock()
 		shops = append(shops, newShop)
+		mx.Unlock()
 		return nil, shops
 	} else if url == "/changeuser/" && met == "PUT" {
 		ids, err := strconv.Atoi(id)
-
 		if err != nil {
-			logrus.Fatalln(err)
+			logrus.Printf("Не удалось сконвертировать. %s", err)
 			return nil, nil
 		}
 		if ids >= len(users) {
-			logrus.Fatalln(err)
+			logrus.Printf("Вы выбрали элемент, которого нет. %s", err)
 			return nil, nil
 		}
 		users[ids] = newUser
@@ -39,11 +44,11 @@ func UniversalFunc(met, url, id string, newUser model.User, newShop model.Shop) 
 	} else if url == "/changeshop/" && met == "PUT" {
 		ids, err := strconv.Atoi(id)
 		if err != nil {
-			logrus.Fatalln(err)
+			logrus.Printf("Не удалось сконвертировать. %s", err)
 			return nil, nil
 		}
 		if ids >= len(shops) {
-			logrus.Fatalln(err)
+			logrus.Printf("Вы выбрали элемент, которого нет. %s", err)
 			return nil, nil
 		}
 		shops[ids] = newShop
@@ -51,11 +56,11 @@ func UniversalFunc(met, url, id string, newUser model.User, newShop model.Shop) 
 	} else if url == "/changeuser/" && met == "DELETE" {
 		ids, err := strconv.Atoi(id)
 		if err != nil {
-			logrus.Fatalln(err)
+			logrus.Printf("Не удалось сконвертировать. %s", err)
 			return nil, nil
 		}
 		if ids >= len(users) {
-			logrus.Fatalln(err)
+			logrus.Printf("Вы выбрали элемент, которого нет. %s", err)
 			return nil, nil
 		}
 		users = append(users[:ids], users[ids+1:]...)
@@ -63,11 +68,11 @@ func UniversalFunc(met, url, id string, newUser model.User, newShop model.Shop) 
 	} else if url == "/changeshop/" && met == "DELETE" {
 		ids, err := strconv.Atoi(id)
 		if err != nil {
-			logrus.Fatalln(err)
+			logrus.Printf("Не удалось сконвертировать. %s", err)
 			return nil, nil
 		}
 		if ids >= len(shops) {
-			logrus.Fatalln(err)
+			logrus.Printf("Вы выбрали элемент, которого нет. %s", err)
 			return nil, nil
 		}
 		shops = append(shops[:ids], shops[ids+1:]...)
@@ -78,12 +83,12 @@ func UniversalFunc(met, url, id string, newUser model.User, newShop model.Shop) 
 		return nil, shops
 
 	}
-	logrus.Println("Сорян, ничего не нашлось")
+	logrus.Println("Извините, ничего не нашлось")
 	return nil, nil
 }
 
-// GetOneTable Функция, которая получает одну запись по имени той, или иной сущности. В зависимости от URL-a
-func GetOneTable(url, name string) (model.User, model.Shop) {
+// GetOneEntity Функция, которая получает одну запись по имени той, или иной сущности. В зависимости от URL-a
+func GetOneEntity(url, name string) (model.User, model.Shop) {
 	if url == "/getoneuser/" {
 		result := strings.ToLower(name)
 		for i, user := range users {
@@ -129,7 +134,7 @@ func GetOneField(urlField, reqId string) (model.User, model.Shop) {
 		}
 		us := model.User{}
 		if err = json.Unmarshal(jsonbody, &us); err != nil {
-			logrus.Fatalln(err)
+			logrus.Printf("Не удалось преаброзовать: %s", err)
 			return model.User{}, model.Shop{}
 		}
 		return us, model.Shop{}
@@ -149,11 +154,11 @@ func GetOneField(urlField, reqId string) (model.User, model.Shop) {
 		}
 		jsonbody, err := json.Marshal(mp)
 		if err != nil {
-			logrus.Fatalln(err)
+			logrus.Printf("Не удалось преаброзовать: %s", err)
 		}
 		sh := model.Shop{}
 		if err = json.Unmarshal(jsonbody, &sh); err != nil {
-			logrus.Fatalln(err)
+			logrus.Printf("Не удалось преаброзовать: %s", err)
 			return model.User{}, model.Shop{}
 		}
 		return model.User{}, sh
